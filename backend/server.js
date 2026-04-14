@@ -1,20 +1,24 @@
-import express from "express";
-import cors from "cors";
-import dotenv from "dotenv";
-import db from "./config/db.js";
+const express = require("express");
+const cors = require("cors");
+require("dotenv").config();
 
-dotenv.config();
+const sequelize = require("./config/database");
+require("./models/index");
+
+const personneRoutes = require("./routes/personne.routes");
 
 const app = express();
-
 app.use(cors());
 app.use(express.json());
 
-app.get("/", (req, res) => {
-  res.send("API EKAR fonctionne 🚀");
-});
+app.use("/api/personnes", personneRoutes);
 
 const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => {
-  console.log(`Serveur lancé sur http://localhost:${PORT}`);
-});
+
+sequelize
+  .sync({ alter: true })//alter: true pour ne pas raser les données existantes
+  .then(() => {
+    console.log("Base de données synchronisée");
+    app.listen(PORT, () => console.log(`Serveur sur le port ${PORT}`));
+  })
+  .catch((err) => console.error("Erreur DB:", err));

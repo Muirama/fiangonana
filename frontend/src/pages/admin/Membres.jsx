@@ -1,77 +1,48 @@
 import { useState } from "react";
-import { mockMembres, roleColors } from "../../data/mockData";
-
-const initialForm = {
-  nom: "",
-  prenom: "",
-  famille: "",
-  role: "Membre",
-  quartier: "",
-  telephone: "",
-  statut: "Actif",
-};
+import { FaSearch } from "react-icons/fa";
+import { usePersonnes } from "../../hooks/usePersonnes";
+import PersonneModal from "../../components/ui/personnes/PersonneModal";
+import DeleteModal from "../../components/ui/personnes/DeleteModal";
 
 export default function Membres() {
-  const [membres, setMembres] = useState(mockMembres);
+  const {
+    personnes,
+    loading,
+    error,
+    createPersonne,
+    updatePersonne,
+    deletePersonne,
+  } = usePersonnes();
   const [search, setSearch] = useState("");
-  const [filterStatut, setFilterStatut] = useState("Tous");
   const [showModal, setShowModal] = useState(false);
-  const [form, setForm] = useState(initialForm);
-  const [editId, setEditId] = useState(null);
-  const [deleteConfirm, setDeleteConfirm] = useState(null);
+  const [editData, setEditData] = useState(null);// null = ajout, objet = édition
+  const [deleteTarget, setDeleteTarget] = useState(null);
 
-  const filtered = membres.filter((m) => {
+  const filtered = personnes.filter((p) => {
     const q = search.toLowerCase();
-    const matchSearch =
+    return (
       !q ||
-      `${m.nom} ${m.prenom} ${m.famille} ${m.quartier}`
-        .toLowerCase()
-        .includes(q);
-    const matchStatut = filterStatut === "Tous" || m.statut === filterStatut;
-    return matchSearch && matchStatut;
+      `${p.nom} ${p.prenom || ""} ${p.contact || ""}`.toLowerCase().includes(q)
+    );
   });
 
   const openAdd = () => {
-    setForm(initialForm);
-    setEditId(null);
+    setEditData(null);
     setShowModal(true);
   };
-  const openEdit = (m) => {
-    setForm({
-      nom: m.nom,
-      prenom: m.prenom,
-      famille: m.famille,
-      role: m.role,
-      quartier: m.quartier,
-      telephone: m.telephone,
-      statut: m.statut,
-    });
-    setEditId(m.id);
+  const openEdit = (p) => {
+    setEditData(p);
     setShowModal(true);
   };
 
-  const handleSave = () => {
-    if (!form.nom || !form.prenom) return;
-    if (editId) {
-      setMembres((prev) =>
-        prev.map((m) => (m.id === editId ? { ...m, ...form } : m)),
-      );
-    } else {
-      setMembres((prev) => [
-        ...prev,
-        {
-          id: Date.now(),
-          ...form,
-          dateAdhesion: new Date().toISOString().split("T")[0],
-        },
-      ]);
-    }
-    setShowModal(false);
+  const handleSave = async (form) => {
+    if (editData) await updatePersonne(editData.id, form);
+    else await createPersonne(form);
   };
 
-  const handleDelete = (id) => {
-    setMembres((prev) => prev.filter((m) => m.id !== id));
-    setDeleteConfirm(null);
+  const handleDelete = async () => {
+    await deletePersonne(deleteTarget.id);
+    setDeleteTarget(null);
   };
 
   return (
@@ -99,7 +70,7 @@ export default function Membres() {
             Gestion des Membres
           </h1>
           <p style={{ color: "#9a8a7a", fontSize: "0.85rem" }}>
-            Fitantanana ny Mpikambana · {membres.length} membres au total
+            Fitantanana ny Mpikambana · {personnes.length} membres au total
           </p>
         </div>
         <button onClick={openAdd} className="btn-gold">
@@ -107,7 +78,7 @@ export default function Membres() {
         </button>
       </div>
 
-      {/* Filtres */}
+      {/* Barre recherche */}
       <div
         style={{
           background: "white",
@@ -132,7 +103,7 @@ export default function Membres() {
               color: "#9a8a7a",
             }}
           >
-            🔍
+            <FaSearch />
           </span>
           <input
             value={search}
@@ -153,543 +124,290 @@ export default function Membres() {
             }
           />
         </div>
-        <div style={{ display: "flex", gap: "0.5rem" }}>
-          {["Tous", "Actif", "Inactif", "Catéchumène"].map((s) => (
-            <button
-              key={s}
-              onClick={() => setFilterStatut(s)}
-              style={{
-                padding: "0.5rem 0.9rem",
-                borderRadius: "0.4rem",
-                fontSize: "0.8rem",
-                fontWeight: 500,
-                border: "1.5px solid",
-                cursor: "pointer",
-                transition: "all 0.2s",
-                borderColor:
-                  filterStatut === s
-                    ? "var(--gold-500)"
-                    : "rgba(212,160,23,0.2)",
-                background:
-                  filterStatut === s ? "var(--gold-100)" : "transparent",
-                color:
-                  filterStatut === s ? "var(--gold-700)" : "var(--text-dark)",
-              }}
-            >
-              {s}
-            </button>
-          ))}
-        </div>
-        <div
+        <span
           style={{ color: "#9a8a7a", fontSize: "0.8rem", marginLeft: "auto" }}
         >
           {filtered.length} résultat{filtered.length !== 1 ? "s" : ""}
-        </div>
+        </span>
       </div>
+
+      {/* États */}
+      {loading && (
+        <p style={{ color: "#9a8a7a", textAlign: "center", padding: "2rem" }}>
+          Chargement...
+        </p>
+      )}
+      {error && (
+        <p
+          style={{
+            color: "rgb(185,28,28)",
+            textAlign: "center",
+            padding: "2rem",
+          }}
+        >
+          Erreur : {error}
+        </p>
+      )}
 
       {/* Table */}
-      <div
-        style={{
-          background: "white",
-          borderRadius: "1rem",
-          boxShadow: "0 4px 20px rgba(0,0,0,0.06)",
-          border: "1px solid rgba(212,160,23,0.1)",
-          overflow: "hidden",
-        }}
-      >
-        <div style={{ overflowX: "auto" }}>
-          <table style={{ width: "100%", borderCollapse: "collapse" }}>
-            <thead>
-              <tr
-                style={{
-                  background:
-                    "linear-gradient(135deg, var(--beige-100), var(--gold-100))",
-                  borderBottom: "2px solid rgba(212,160,23,0.2)",
-                }}
-              >
-                {{
-                  Membre: "Membre",
-                  Famille: "Famille",
-                  Rôle: "Rôle",
-                  Quartier: "Quartier",
-                  Téléphone: "Téléphone",
-                  Statut: "Statut",
-                  Actions: "Actions",
-                }.map((h) => (
-                  <th
-                    key={h}
-                    style={{
-                      padding: "0.9rem 1rem",
-                      textAlign: "left",
-                      color: "var(--text-dark)",
-                      fontSize: "0.75rem",
-                      fontWeight: 700,
-                      letterSpacing: "0.08em",
-                      textTransform: "uppercase",
-                      whiteSpace: "nowrap",
-                    }}
-                  >
-                    {h}
-                  </th>
-                ))}
-              </tr>
-            </thead>
-            <tbody>
-              {filtered.length === 0 ? (
-                <tr>
-                  <td
-                    colSpan={7}
-                    style={{
-                      textAlign: "center",
-                      padding: "3rem",
-                      color: "#9a8a7a",
-                    }}
-                  >
-                    Aucun membre trouvé
-                  </td>
-                </tr>
-              ) : (
-                filtered.map((m, idx) => (
-                  <tr
-                    key={m.id}
-                    style={{
-                      borderBottom: "1px solid rgba(212,160,23,0.08)",
-                      background:
-                        idx % 2 === 0 ? "white" : "rgba(250,247,242,0.5)",
-                      transition: "background 0.15s",
-                    }}
-                    onMouseEnter={(e) =>
-                      (e.currentTarget.style.background =
-                        "rgba(212,160,23,0.05)")
-                    }
-                    onMouseLeave={(e) =>
-                      (e.currentTarget.style.background =
-                        idx % 2 === 0 ? "white" : "rgba(250,247,242,0.5)")
-                    }
-                  >
-                    <td style={{ padding: "0.85rem 1rem" }}>
-                      <div
-                        style={{
-                          display: "flex",
-                          alignItems: "center",
-                          gap: "0.6rem",
-                        }}
-                      >
-                        <div
-                          style={{
-                            width: 36,
-                            height: 36,
-                            borderRadius: "50%",
-                            background: `linear-gradient(135deg, hsl(${(m.id * 47) % 360}, 60%, 55%), hsl(${(m.id * 47 + 60) % 360}, 70%, 45%))`,
-                            display: "flex",
-                            alignItems: "center",
-                            justifyContent: "center",
-                            color: "white",
-                            fontSize: "0.78rem",
-                            fontWeight: 700,
-                            flexShrink: 0,
-                          }}
-                        >
-                          {m.prenom.charAt(0)}
-                          {m.nom.charAt(0)}
-                        </div>
-                        <div>
-                          <div
-                            style={{
-                              fontWeight: 600,
-                              fontSize: "0.88rem",
-                              color: "#2d2416",
-                            }}
-                          >
-                            {m.prenom} {m.nom}
-                          </div>
-                          <div
-                            style={{ color: "#b8a898", fontSize: "0.72rem" }}
-                          >
-                            Depuis {new Date(m.dateAdhesion).getFullYear()}
-                          </div>
-                        </div>
-                      </div>
-                    </td>
-                    <td
-                      style={{
-                        padding: "0.85rem 1rem",
-                        color: "#6b5a4a",
-                        fontSize: "0.85rem",
-                      }}
-                    >
-                      {m.famille}
-                    </td>
-                    <td style={{ padding: "0.85rem 1rem" }}>
-                      <span
-                        style={{
-                          background:
-                            roleColors[m.role]?.bg?.replace("bg-", "") ||
-                            "#f3f4f6",
-                          color:
-                            roleColors[m.role]?.text?.replace("text-", "") ||
-                            "#374151",
-                          padding: "3px 10px",
-                          borderRadius: "999px",
-                          fontSize: "0.73rem",
-                          fontWeight: 600,
-                        }}
-                      >
-                        {m.role}
-                      </span>
-                    </td>
-                    <td
-                      style={{
-                        padding: "0.85rem 1rem",
-                        color: "#6b5a4a",
-                        fontSize: "0.85rem",
-                      }}
-                    >
-                      {m.quartier}
-                    </td>
-                    <td
-                      style={{
-                        padding: "0.85rem 1rem",
-                        color: "#6b5a4a",
-                        fontSize: "0.83rem",
-                      }}
-                    >
-                      {m.telephone}
-                    </td>
-                    <td style={{ padding: "0.85rem 1rem" }}>
-                      <span
-                        style={{
-                          background:
-                            m.statut === "Actif"
-                              ? "rgb(209,250,229)"
-                              : m.statut === "Inactif"
-                                ? "rgb(254,226,226)"
-                                : "rgb(219,234,254)",
-                          color:
-                            m.statut === "Actif"
-                              ? "rgb(6,95,70)"
-                              : m.statut === "Inactif"
-                                ? "rgb(185,28,28)"
-                                : "rgb(30,64,175)",
-                          padding: "3px 10px",
-                          borderRadius: "999px",
-                          fontSize: "0.73rem",
-                          fontWeight: 600,
-                        }}
-                      >
-                        {m.statut}
-                      </span>
-                    </td>
-                    <td style={{ padding: "0.85rem 1rem" }}>
-                      <div style={{ display: "flex", gap: "0.4rem" }}>
-                        <button
-                          onClick={() => openEdit(m)}
-                          className="btn-beige"
-                          style={{
-                            padding: "0.35rem 0.65rem",
-                            fontSize: "0.78rem",
-                          }}
-                        >
-                          ✏️
-                        </button>
-                        <button
-                          onClick={() => setDeleteConfirm(m)}
-                          style={{
-                            padding: "0.35rem 0.65rem",
-                            background: "rgb(254,226,226)",
-                            color: "rgb(185,28,28)",
-                            border: "none",
-                            borderRadius: "0.35rem",
-                            cursor: "pointer",
-                            fontSize: "0.78rem",
-                          }}
-                        >
-                          🗑️
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))
-              )}
-            </tbody>
-          </table>
-        </div>
-      </div>
-
-      {/* MODAL Ajout/Édition */}
-      {showModal && (
+      {!loading && !error && (
         <div
           style={{
-            position: "fixed",
-            inset: 0,
-            background: "rgba(0,0,0,0.5)",
-            backdropFilter: "blur(4px)",
-            zIndex: 200,
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            padding: "1rem",
+            background: "white",
+            borderRadius: "1rem",
+            boxShadow: "0 4px 20px rgba(0,0,0,0.06)",
+            border: "1px solid rgba(212,160,23,0.1)",
+            overflow: "hidden",
           }}
-          onClick={(e) => e.target === e.currentTarget && setShowModal(false)}
         >
-          <div
-            style={{
-              background: "white",
-              borderRadius: "1rem",
-              padding: "2rem",
-              width: "100%",
-              maxWidth: 520,
-              boxShadow: "0 20px 60px rgba(0,0,0,0.2)",
-              border: "1px solid rgba(212,160,23,0.2)",
-            }}
-          >
-            <div
-              style={{
-                display: "flex",
-                justifyContent: "space-between",
-                alignItems: "center",
-                marginBottom: "1.5rem",
-              }}
-            >
-              <div>
-                <h2
+          <div style={{ overflowX: "auto" }}>
+            <table style={{ width: "100%", borderCollapse: "collapse" }}>
+              <thead>
+                <tr
                   style={{
-                    fontFamily: "'Cinzel', serif",
-                    color: "var(--text-dark)",
-                    fontSize: "1.2rem",
+                    background:
+                      "linear-gradient(135deg, var(--beige-100), var(--gold-100))",
+                    borderBottom: "2px solid rgba(212,160,23,0.2)",
                   }}
-                >
-                  {editId ? "Modifier" : "Ajouter"} un membre
-                </h2>
-                <p style={{ color: "#9a8a7a", fontSize: "0.78rem" }}>
-                  {editId ? "Hanova" : "Hanampy"} mpikambana
-                </p>
-              </div>
-              <button
-                onClick={() => setShowModal(false)}
-                style={{
-                  background: "none",
-                  border: "none",
-                  cursor: "pointer",
-                  fontSize: "1.3rem",
-                  color: "#9a8a7a",
-                }}
-              >
-                ×
-              </button>
-            </div>
-            <div
-              style={{
-                display: "grid",
-                gridTemplateColumns: "1fr 1fr",
-                gap: "1rem",
-              }}
-            >
-              {[
-                { key: "prenom", label: "Prénom *", placeholder: "Ex: Jean" },
-                { key: "nom", label: "Nom *", placeholder: "Ex: Rakoto" },
-                { key: "famille", label: "Famille", placeholder: "Ex: Rakoto" },
-                {
-                  key: "quartier",
-                  label: "Quartier",
-                  placeholder: "Ex: Ambohimanarina",
-                },
-                {
-                  key: "telephone",
-                  label: "Téléphone",
-                  placeholder: "+261 34 XX XXX XX",
-                },
-              ].map((f) => (
-                <div
-                  key={f.key}
-                  style={{
-                    gridColumn: f.key === "telephone" ? "1 / -1" : "auto",
-                  }}
-                >
-                  <label
-                    style={{
-                      display: "block",
-                      color: "var(--text-dark)",
-                      fontSize: "0.78rem",
-                      fontWeight: 600,
-                      marginBottom: "0.4rem",
-                      letterSpacing: "0.05em",
-                    }}
-                  >
-                    {f.label}
-                  </label>
-                  <input
-                    value={form[f.key]}
-                    onChange={(e) =>
-                      setForm((p) => ({ ...p, [f.key]: e.target.value }))
-                    }
-                    placeholder={f.placeholder}
-                    className="input-church"
-                  />
-                </div>
-              ))}
-              <div>
-                <label
-                  style={{
-                    display: "block",
-                    color: "var(--text-dark)",
-                    fontSize: "0.78rem",
-                    fontWeight: 600,
-                    marginBottom: "0.4rem",
-                  }}
-                >
-                  Rôle
-                </label>
-                <select
-                  value={form.role}
-                  onChange={(e) =>
-                    setForm((p) => ({ ...p, role: e.target.value }))
-                  }
-                  className="input-church"
                 >
                   {[
                     "Membre",
-                    "Diacre",
-                    "Lecteur",
-                    "Catéchiste",
-                    "Choriste",
-                    "Catéchumène",
-                  ].map((r) => (
-                    <option key={r}>{r}</option>
+                    "Type",
+                    "Contact",
+                    "Profession",
+                    "Rôle",
+                    "Sacrements",
+                    "Actions",
+                  ].map((h) => (
+                    <th
+                      key={h}
+                      style={{
+                        padding: "0.9rem 1rem",
+                        textAlign: "left",
+                        color: "var(--text-dark)",
+                        fontSize: "0.75rem",
+                        fontWeight: 700,
+                        letterSpacing: "0.08em",
+                        textTransform: "uppercase",
+                        whiteSpace: "nowrap",
+                      }}
+                    >
+                      {h}
+                    </th>
                   ))}
-                </select>
-              </div>
-              <div>
-                <label
-                  style={{
-                    display: "block",
-                    color: "var(--text-dark)",
-                    fontSize: "0.78rem",
-                    fontWeight: 600,
-                    marginBottom: "0.4rem",
-                  }}
-                >
-                  Statut
-                </label>
-                <select
-                  value={form.statut}
-                  onChange={(e) =>
-                    setForm((p) => ({ ...p, statut: e.target.value }))
-                  }
-                  className="input-church"
-                >
-                  {["Actif", "Inactif", "Catéchumène"].map((s) => (
-                    <option key={s}>{s}</option>
-                  ))}
-                </select>
-              </div>
-            </div>
-            <div
-              style={{
-                display: "flex",
-                gap: "0.75rem",
-                marginTop: "1.5rem",
-                justifyContent: "flex-end",
-              }}
-            >
-              <button
-                onClick={() => setShowModal(false)}
-                className="btn-outline"
-              >
-                Annuler
-              </button>
-              <button onClick={handleSave} className="btn-gold">
-                {editId ? "Enregistrer" : "Ajouter"}
-              </button>
-            </div>
+                </tr>
+              </thead>
+              <tbody>
+                {filtered.length === 0 ? (
+                  <tr>
+                    <td
+                      colSpan={7}
+                      style={{
+                        textAlign: "center",
+                        padding: "3rem",
+                        color: "#9a8a7a",
+                      }}
+                    >
+                      Aucun membre trouvé
+                    </td>
+                  </tr>
+                ) : (
+                  filtered.map((p, idx) => (
+                    <tr
+                      key={p.id}
+                      style={{
+                        borderBottom: "1px solid rgba(212,160,23,0.08)",
+                        background:
+                          idx % 2 === 0 ? "white" : "rgba(250,247,242,0.5)",
+                        transition: "background 0.15s",
+                      }}
+                      onMouseEnter={(e) =>
+                        (e.currentTarget.style.background =
+                          "rgba(212,160,23,0.05)")
+                      }
+                      onMouseLeave={(e) =>
+                        (e.currentTarget.style.background =
+                          idx % 2 === 0 ? "white" : "rgba(250,247,242,0.5)")
+                      }
+                    >
+                      {/* Membre */}
+                      <td style={{ padding: "0.85rem 1rem" }}>
+                        <div
+                          style={{
+                            display: "flex",
+                            alignItems: "center",
+                            gap: "0.6rem",
+                          }}
+                        >
+                          <div
+                            style={{
+                              width: 36,
+                              height: 36,
+                              borderRadius: "50%",
+                              background: `linear-gradient(135deg, hsl(${(p.id * 47) % 360},60%,55%), hsl(${(p.id * 47 + 60) % 360},70%,45%))`,
+                              display: "flex",
+                              alignItems: "center",
+                              justifyContent: "center",
+                              color: "white",
+                              fontSize: "0.78rem",
+                              fontWeight: 700,
+                              flexShrink: 0,
+                            }}
+                          >
+                            {(p.prenom || p.nom || "?").charAt(0)}
+                            {(p.nom || "").charAt(0)}
+                          </div>
+                          <div>
+                            <div
+                              style={{
+                                fontWeight: 600,
+                                fontSize: "0.88rem",
+                                color: "#2d2416",
+                              }}
+                            >
+                              {p.prenom} {p.nom}
+                            </div>
+                            <div
+                              style={{ color: "#b8a898", fontSize: "0.72rem" }}
+                            >
+                              #{p.id}
+                            </div>
+                          </div>
+                        </div>
+                      </td>
+                      {/* Type */}
+                      <td style={{ padding: "0.85rem 1rem" }}>
+                        <span
+                          style={{
+                            background: "rgba(212,160,23,0.12)",
+                            color: "#8B6914",
+                            padding: "3px 10px",
+                            borderRadius: "999px",
+                            fontSize: "0.73rem",
+                            fontWeight: 600,
+                          }}
+                        >
+                          {p.type}
+                        </span>
+                      </td>
+                      <td
+                        style={{
+                          padding: "0.85rem 1rem",
+                          color: "#6b5a4a",
+                          fontSize: "0.85rem",
+                        }}
+                      >
+                        {p.contact || "—"}
+                      </td>
+                      <td
+                        style={{
+                          padding: "0.85rem 1rem",
+                          color: "#6b5a4a",
+                          fontSize: "0.85rem",
+                        }}
+                      >
+                        {p.profession || "—"}
+                      </td>
+                      <td
+                        style={{
+                          padding: "0.85rem 1rem",
+                          color: "#6b5a4a",
+                          fontSize: "0.85rem",
+                        }}
+                      >
+                        {p.role_eglise || "—"}
+                      </td>
+                      {/* Sacrements */}
+                      <td style={{ padding: "0.85rem 1rem" }}>
+                        <div
+                          style={{
+                            display: "flex",
+                            gap: "0.3rem",
+                            flexWrap: "wrap",
+                          }}
+                        >
+                          {[
+                            ["bapteme", "B"],
+                            ["communion", "C"],
+                            ["confirmation", "Conf"],
+                          ].map(([k, label]) =>
+                            p[k] ? (
+                              <span
+                                key={k}
+                                style={{
+                                  background: "rgb(209,250,229)",
+                                  color: "rgb(6,95,70)",
+                                  padding: "2px 8px",
+                                  borderRadius: "999px",
+                                  fontSize: "0.68rem",
+                                  fontWeight: 600,
+                                }}
+                              >
+                                {label}
+                              </span>
+                            ) : null,
+                          )}
+                          {!p.bapteme && !p.communion && !p.confirmation && (
+                            <span
+                              style={{ color: "#b8a898", fontSize: "0.78rem" }}
+                            >
+                              —
+                            </span>
+                          )}
+                        </div>
+                      </td>
+                      {/* Actions */}
+                      <td style={{ padding: "0.85rem 1rem" }}>
+                        <div style={{ display: "flex", gap: "0.4rem" }}>
+                          <button
+                            onClick={() => openEdit(p)}
+                            className="btn-beige"
+                            style={{
+                              padding: "0.35rem 0.65rem",
+                              fontSize: "0.78rem",
+                            }}
+                          >
+                            ✏️
+                          </button>
+                          <button
+                            onClick={() => setDeleteTarget(p)}
+                            style={{
+                              padding: "0.35rem 0.65rem",
+                              background: "rgb(254,226,226)",
+                              color: "rgb(185,28,28)",
+                              border: "none",
+                              borderRadius: "0.35rem",
+                              cursor: "pointer",
+                              fontSize: "0.78rem",
+                            }}
+                          >
+                            🗑️
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
           </div>
         </div>
       )}
 
-      {/* MODAL Suppression */}
-      {deleteConfirm && (
-        <div
-          style={{
-            position: "fixed",
-            inset: 0,
-            background: "rgba(0,0,0,0.5)",
-            backdropFilter: "blur(4px)",
-            zIndex: 200,
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-          }}
-        >
-          <div
-            style={{
-              background: "white",
-              borderRadius: "1rem",
-              padding: "2rem",
-              maxWidth: 400,
-              width: "90%",
-              textAlign: "center",
-              boxShadow: "0 20px 60px rgba(0,0,0,0.2)",
-            }}
-          >
-            <div style={{ fontSize: "2.5rem", marginBottom: "1rem" }}>⚠️</div>
-            <h3
-              style={{
-                fontFamily: "'Cinzel', serif",
-                color: "var(--text-dark)",
-                marginBottom: "0.5rem",
-              }}
-            >
-              Confirmer la suppression
-            </h3>
-            <p
-              style={{
-                color: "#6b5a4a",
-                fontSize: "0.9rem",
-                marginBottom: "1.5rem",
-              }}
-            >
-              Voulez-vous vraiment supprimer{" "}
-              <strong>
-                {deleteConfirm.prenom} {deleteConfirm.nom}
-              </strong>{" "}
-              ?
-            </p>
-            <div
-              style={{
-                display: "flex",
-                gap: "0.75rem",
-                justifyContent: "center",
-              }}
-            >
-              <button
-                onClick={() => setDeleteConfirm(null)}
-                style={{
-                  padding: "0.65rem 1.5rem",
-                  border: "1.5px solid rgba(212,160,23,0.3)",
-                  borderRadius: "0.4rem",
-                  background: "transparent",
-                  cursor: "pointer",
-                }}
-              >
-                Annuler
-              </button>
-              <button
-                onClick={() => handleDelete(deleteConfirm.id)}
-                style={{
-                  padding: "0.65rem 1.5rem",
-                  background: "rgb(239,68,68)",
-                  color: "white",
-                  border: "none",
-                  borderRadius: "0.4rem",
-                  cursor: "pointer",
-                  fontWeight: 600,
-                }}
-              >
-                Supprimer
-              </button>
-            </div>
-          </div>
-        </div>
+      {showModal && (
+        <PersonneModal
+          editData={editData}
+          onSave={handleSave}
+          onClose={() => setShowModal(false)}
+        />
+      )}
+
+      {deleteTarget && (
+        <DeleteModal
+          personne={deleteTarget}
+          onConfirm={handleDelete}
+          onClose={() => setDeleteTarget(null)}
+        />
       )}
     </div>
   );
