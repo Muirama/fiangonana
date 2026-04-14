@@ -1,0 +1,286 @@
+@import url("https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700;900&family=Lora:ital,wght@0,400;0,500;0,600;1,400&family=Nunito:wght@300;400;500;600;700&display=swap");
+@import "tailwindcss";
+@import "./styles/tokens.css";
+@import "./styles/animations.css";
+@import "./styles/components.css";
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  font-family: "Nunito", sans-serif;
+  background: var(--cream);
+  color: var(--text-dark);
+  line-height: 1.6;
+}
+
+/* Typography */
+.font-cinzel {
+  font-family: "Cinzel", serif;
+}
+
+.font-lora {
+  font-family: "Lora", serif;
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  font-family: "Cinzel", serif;
+  color: var(--text-dark);
+}
+
+/* Utilities */
+.truncate-line {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.truncate-lines-2 {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  line-clamp: 2; /* propriété standard */
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+/* Scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+}
+::-webkit-scrollbar-track {
+  background: var(--beige-100);
+}
+::-webkit-scrollbar-thumb {
+  background: var(--gold-500);
+  border-radius: 3px;
+}
+
+/* Animations */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(24px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+@keyframes shimmer {
+  0% {
+    background-position: -200% center;
+  }
+  100% {
+    background-position: 200% center;
+  }
+}
+@keyframes float {
+  0%,
+  100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-8px);
+  }
+}
+@keyframes pulse-gold {
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 rgba(212, 160, 23, 0.4);
+  }
+  50% {
+    box-shadow: 0 0 0 12px rgba(212, 160, 23, 0);
+  }
+}
+
+.animate-fade-up {
+  animation: fadeInUp 0.6s ease forwards;
+}
+.animate-float {
+  animation: float 4s ease-in-out infinite;
+}
+.animate-pulse-gold {
+  animation: pulse-gold 2s ease-in-out infinite;
+}
+
+.delay-100 {
+  animation-delay: 0.1s;
+}
+.delay-200 {
+  animation-delay: 0.2s;
+}
+.delay-300 {
+  animation-delay: 0.3s;
+}
+.delay-400 {
+  animation-delay: 0.4s;
+}
+.delay-500 {
+  animation-delay: 0.5s;
+}
+
+/* Gold shimmer text */
+.text-shimmer {
+  background: linear-gradient(
+    90deg,
+    var(--gold-600),
+    var(--gold-300),
+    var(--gold-600)
+  );
+  background-size: 200% auto;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  animation: shimmer 3s linear infinite;
+}
+
+/* Cross decorative */
+.cross-divider {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  color: var(--gold-500);
+}
+.cross-divider::before,
+.cross-divider::after {
+  content: "";
+  flex: 1;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--gold-400), transparent);
+}
+
+/* Card glass */
+.card-glass {
+  background: rgba(255, 253, 249, 0.85);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(212, 160, 23, 0.2);
+}
+
+/* Sidebar */
+.sidebar-link {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.65rem 1rem;
+  border-radius: 0.5rem;
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: #c4b5a0;
+  transition: all 0.2s;
+  cursor: pointer;
+  text-decoration: none;
+}
+.sidebar-link:hover {
+  background: rgba(212, 160, 23, 0.1);
+  color: var(--gold-300);
+}
+.sidebar-link.active {
+  background: linear-gradient(
+    135deg,
+    rgba(212, 160, 23, 0.2),
+    rgba(139, 92, 246, 0.15)
+  );
+  color: var(--gold-300);
+  border-left: 3px solid var(--gold-400);
+}
+
+/* Table */
+.table-row:hover {
+  background: rgba(212, 160, 23, 0.05);
+}
+
+/* Badge */
+.badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 10px;
+  border-radius: 999px;
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+}
+
+/* Input focus */
+.input-church {
+  background: rgba(255, 253, 249, 0.9);
+  border: 1.5px solid rgba(212, 160, 23, 0.3);
+  border-radius: 0.5rem;
+  padding: 0.65rem 1rem;
+  width: 100%;
+  font-family: "Nunito", sans-serif;
+  font-size: 0.9rem;
+  transition:
+    border-color 0.2s,
+    box-shadow 0.2s;
+  outline: none;
+}
+.input-church:focus {
+  border-color: var(--gold-500);
+  box-shadow: 0 0 0 3px rgba(212, 160, 23, 0.12);
+}
+
+/* Button */
+.btn-gold {
+  background: linear-gradient(135deg, var(--gold-500), var(--gold-600));
+  color: white;
+  border: none;
+  border-radius: 0.5rem;
+  padding: 0.7rem 1.5rem;
+  font-family: "Cinzel", serif;
+  font-size: 0.85rem;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  cursor: pointer;
+  transition: all 0.2s;
+  box-shadow: 0 4px 15px rgba(212, 160, 23, 0.3);
+}
+.btn-gold:hover {
+  background: linear-gradient(135deg, var(--gold-600), var(--gold-700));
+  transform: translateY(-1px);
+  box-shadow: 0 6px 20px rgba(212, 160, 23, 0.4);
+}
+
+.btn-beige {
+  background: linear-gradient(135deg, var(--beige-500), var(--beige-700));
+  color: white;
+  border: none;
+  border-radius: 0.5rem;
+  padding: 0.7rem 1.5rem;
+  font-family: "Nunito", sans-serif;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.btn-beige:hover {
+  transform: translateY(-1px);
+  filter: brightness(1.1);
+}
+
+/* Stat card */
+.stat-card {
+  position: relative;
+  overflow: hidden;
+  border-radius: 1rem;
+  padding: 1.5rem;
+}
+.stat-card::before {
+  content: "";
+  position: absolute;
+  top: -30px;
+  right: -30px;
+  width: 100px;
+  height: 100px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.08);
+}
