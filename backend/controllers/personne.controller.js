@@ -4,6 +4,7 @@ const createPersonne = async (req, res) => {
   try {
     const {
       nom,
+      prenom,
       date_naissance,
       sexe,
       type,
@@ -26,6 +27,7 @@ const createPersonne = async (req, res) => {
 
     const newPersonne = await Personne.create({
       nom,
+      prenom,
       date_naissance,
       sexe,
       type,

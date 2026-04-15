@@ -1,9 +1,11 @@
 import { useState, useEffect, useCallback } from "react";
 
-const API = `${import.meta.env.VITE_API_URL}/personnes`;
+const API = `${import.meta.env.VITE_API_URL}/familles`;
+const API_APV = `${import.meta.env.VITE_API_URL}/apvs`;
 
-export function usePersonnes() {
-  const [personnes, setPersonnes] = useState([]);
+export function useFamilles() {
+  const [familles, setFamilles] = useState([]);
+  const [apvs, setApvs] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
@@ -11,10 +13,14 @@ export function usePersonnes() {
     setLoading(true);
     setError(null);
     try {
-      const res = await fetch(API);
-      if (!res.ok) throw new Error("Erreur serveur");
-      const data = await res.json();
-      setPersonnes(data);
+      const [resFam, resApv] = await Promise.all([fetch(API), fetch(API_APV)]);
+      if (!resFam.ok || !resApv.ok) throw new Error("Erreur serveur");
+      const [famData, apvData] = await Promise.all([
+        resFam.json(),
+        resApv.json(),
+      ]);
+      setFamilles(famData);
+      setApvs(apvData);
     } catch (e) {
       setError(e.message);
     } finally {
@@ -26,7 +32,7 @@ export function usePersonnes() {
     fetchAll();
   }, [fetchAll]);
 
-  const createPersonne = async (form) => {
+  const createFamille = async (form) => {
     const res = await fetch(API, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -36,7 +42,7 @@ export function usePersonnes() {
     await fetchAll();
   };
 
-  const updatePersonne = async (id, form) => {
+  const updateFamille = async (id, form) => {
     const res = await fetch(`${API}/${id}`, {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
@@ -46,18 +52,19 @@ export function usePersonnes() {
     await fetchAll();
   };
 
-  const deletePersonne = async (id) => {
+  const deleteFamille = async (id) => {
     const res = await fetch(`${API}/${id}`, { method: "DELETE" });
     if (!res.ok) throw new Error("Erreur suppression");
     await fetchAll();
   };
 
   return {
-    personnes,
+    familles,
+    apvs,
     loading,
     error,
-    createPersonne,
-    updatePersonne,
-    deletePersonne,
+    createFamille,
+    updateFamille,
+    deleteFamille,
   };
 }

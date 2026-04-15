@@ -3,6 +3,7 @@ const sequelize = require("../config/database");
 
 const Personne = sequelize.define("Personne", {
   nom: { type: DataTypes.STRING, allowNull: false },
+  prenom: { type: DataTypes.STRING },
   date_naissance: { type: DataTypes.DATEONLY },
   sexe: { type: DataTypes.ENUM("M", "F") },
   type: { type: DataTypes.ENUM("pere", "mere", "enfant", "autre") },

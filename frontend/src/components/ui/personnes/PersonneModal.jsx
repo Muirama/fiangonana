@@ -115,7 +115,7 @@ export default function PersonneModal({ editData, onSave, onClose }) {
             {
               key: "contact",
               label: "Contact",
-              placeholder: "+261 34 XX XXX XX",
+              placeholder: " 03X XX XXX XX",
             },
             {
               key: "profession",
@@ -125,7 +125,7 @@ export default function PersonneModal({ editData, onSave, onClose }) {
             {
               key: "role_eglise",
               label: "Rôle dans l'église",
-              placeholder: "Ex: Diacre",
+              placeholder: "Ex: Katekista",
             },
             {
               key: "groupe_eglise",
