@@ -19,10 +19,10 @@ const createPersonne = async (req, res) => {
     } = req.body;
 
     // Seuls les champs vraiment obligatoires
-    if (!nom || !sexe || !type || !contact) {
+    if (!nom || !sexe || !type ) {
       return res
         .status(400)
-        .json({ error: "nom, sexe, type et contact sont requis" });
+        .json({ error: "nom, sexe, type sont requis" });
     }
 
     const newPersonne = await Personne.create({
@@ -95,10 +95,23 @@ const deletePersonne = async (req, res) => {
   }
 };
 
+const assignerFamille = async (req, res) => {
+  try {
+    const {famille_id} = req.body;
+    const personne = await Personne.findByPk(req.params.id);
+    if (!personne) return res.status(404).json({ error: "Personne non trouvée" });
+    await personne.update({ famille_id : famille_id || null });
+    res.status(200).json(personne);
+  } catch (error) {
+    res.status(500).json({ error: "Erreur serveur" });
+  }
+}
+
 module.exports = {
   createPersonne,
   getAllPersonnes,
   getPersonneById,
   updatePersonne,
   deletePersonne,
+  assignerFamille,
 };

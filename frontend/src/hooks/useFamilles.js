@@ -66,5 +66,6 @@ export function useFamilles() {
     createFamille,
     updateFamille,
     deleteFamille,
+    fetchAll
   };
 }

@@ -42,9 +42,7 @@ export default function Navbar() {
         }}
       >
         {/* Logo */}
-        <div
-          style={{ display: "flex", alignItems: "center", gap: "0.75rem" }}
-        >
+        <div style={{ display: "flex", alignItems: "center", gap: "0.75rem" }}>
           <div
             style={{
               fontSize: "1.8rem",
@@ -93,9 +91,7 @@ export default function Navbar() {
                   fontWeight: 500,
                   transition: "color 0.2s",
                 }}
-                onMouseEnter={(e) =>
-                  (e.target.style.color = "var(--gold-300)")
-                }
+                onMouseEnter={(e) => (e.target.style.color = "var(--gold-300)")}
                 onMouseLeave={(e) =>
                   (e.target.style.color = "rgba(255,255,255,0.85)")
                 }

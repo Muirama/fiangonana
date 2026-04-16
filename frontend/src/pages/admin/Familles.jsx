@@ -14,6 +14,7 @@ export default function Familles() {
     createFamille,
     updateFamille,
     deleteFamille,
+    fetchAll
   } = useFamilles();
   const [search, setSearch] = useState("");
   const [showModal, setShowModal] = useState(false);
@@ -232,6 +233,7 @@ export default function Familles() {
                 famille={f}
                 onEdit={openEdit}
                 onDelete={setDeleteTarget}
+                onRefresh={fetchAll}
               />
             ))}
           </div>

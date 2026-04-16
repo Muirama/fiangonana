@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { FaSearch } from "react-icons/fa";
+import { FaSearch, FaEdit, FaTrash } from "react-icons/fa";
 import { usePersonnes } from "../../hooks/usePersonnes";
 import PersonneModal from "../../components/ui/personnes/PersonneModal";
 import DeleteModal from "../../components/ui/personnes/DeleteModal";
@@ -361,13 +361,13 @@ export default function Membres() {
                         <div style={{ display: "flex", gap: "0.4rem" }}>
                           <button
                             onClick={() => openEdit(p)}
-                            className="btn-beige"
+                            className="btn-gold"
                             style={{
                               padding: "0.35rem 0.65rem",
                               fontSize: "0.78rem",
                             }}
                           >
-                            ✏️
+                            <FaEdit />
                           </button>
                           <button
                             onClick={() => setDeleteTarget(p)}
@@ -381,7 +381,7 @@ export default function Membres() {
                               fontSize: "0.78rem",
                             }}
                           >
-                            🗑️
+                            <FaTrash />
                           </button>
                         </div>
                       </td>
