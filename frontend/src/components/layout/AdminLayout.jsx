@@ -13,6 +13,7 @@ import {
   FaChevronRight,
   FaSignOutAlt,
   FaGlobe,
+  FaRing
 } from "react-icons/fa";
 
 const navItems = [
@@ -33,6 +34,12 @@ const navItems = [
     label: "Familles",
     labelMg: "Fianakaviana",
     path: "/admin/familles",
+  },
+  {
+    icon: <FaRing />,
+    label: "Mariages",
+    labelMg: "Fanambadiana",
+    path: "/admin/mariages",
   },
   {
     icon: <FaCalendarAlt />,
@@ -59,7 +66,7 @@ const navItems = [
 
 export default function AdminLayout({ children }) {
   const [collapsed, setCollapsed] = useState(false);
-  const { user, logout } = useAuth();
+  const { logout } = useAuth();
   const location = useLocation();
   const navigate = useNavigate();
 
@@ -317,41 +324,6 @@ export default function AdminLayout({ children }) {
                 marginBottom: "0.75rem",
               }}
             >
-              <div
-                style={{
-                  width: 36,
-                  height: 36,
-                  borderRadius: "50%",
-                  background:
-                    "linear-gradient(135deg, var(--gold-500), var(--beige-400))",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  color: "white",
-                  fontSize: "0.9rem",
-                  fontWeight: 700,
-                  flexShrink: 0,
-                }}
-              >
-                {user?.nom?.charAt(0) || "A"}
-              </div>
-              <div style={{ minWidth: 0 }}>
-                <div
-                  style={{
-                    color: "var(--text-dark)",
-                    fontSize: "0.82rem",
-                    fontWeight: 600,
-                    overflow: "hidden",
-                    textOverflow: "ellipsis",
-                    whiteSpace: "nowrap",
-                  }}
-                >
-                  {user?.nom}
-                </div>
-                <div style={{ color: "var(--text-light)", fontSize: "0.7rem" }}>
-                  Administrateur
-                </div>
-              </div>
             </div>
           )}
           <button

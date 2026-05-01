@@ -15,15 +15,28 @@ export default function Membres() {
   } = usePersonnes();
   const [search, setSearch] = useState("");
   const [showModal, setShowModal] = useState(false);
-  const [editData, setEditData] = useState(null);// null = ajout, objet = édition
+  const [editData, setEditData] = useState(null);
   const [deleteTarget, setDeleteTarget] = useState(null);
+
+  const [filterSexe, setFilterSexe] = useState("Tous");
+  const [filterType, setFilterType] = useState("Tous");
+  const [filterSacrement, setFilterSacrement] = useState("Tous");
 
   const filtered = personnes.filter((p) => {
     const q = search.toLowerCase();
-    return (
+    const matchSearch =
       !q ||
-      `${p.nom} ${p.prenom || ""} ${p.contact || ""}`.toLowerCase().includes(q)
-    );
+      `${p.nom} ${p.prenom || ""} ${p.contact || ""} ${p.profession || ""}`
+        .toLowerCase()
+        .includes(q);
+    const matchSexe = filterSexe === "Tous" || p.sexe === filterSexe;
+    const matchType = filterType === "Tous" || p.type === filterType;
+    const matchSacr =
+      filterSacrement === "Tous" ||
+      (filterSacrement === "bapteme" && p.bapteme) ||
+      (filterSacrement === "communion" && p.communion) ||
+      (filterSacrement === "confirmation" && p.confirmation);
+    return matchSearch && matchSexe && matchType && matchSacr;
   });
 
   const openAdd = () => {
@@ -78,7 +91,7 @@ export default function Membres() {
         </button>
       </div>
 
-      {/* Barre recherche */}
+      {/* Barre de filtres — remplace l'ancienne */}
       <div
         style={{
           background: "white",
@@ -86,13 +99,14 @@ export default function Membres() {
           padding: "1rem 1.25rem",
           marginBottom: "1.25rem",
           display: "flex",
-          gap: "1rem",
+          gap: "0.75rem",
           flexWrap: "wrap",
           alignItems: "center",
           boxShadow: "0 2px 10px rgba(0,0,0,0.04)",
           border: "1px solid rgba(212,160,23,0.1)",
         }}
       >
+        {/* Recherche */}
         <div style={{ flex: 1, minWidth: 200, position: "relative" }}>
           <span
             style={{
@@ -108,7 +122,7 @@ export default function Membres() {
           <input
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            placeholder="Rechercher un membre..."
+            placeholder="Rechercher..."
             style={{
               width: "100%",
               padding: "0.6rem 1rem 0.6rem 2.25rem",
@@ -117,6 +131,7 @@ export default function Membres() {
               fontSize: "0.88rem",
               outline: "none",
               fontFamily: "'Nunito', sans-serif",
+              boxSizing: "border-box",
             }}
             onFocus={(e) => (e.target.style.borderColor = "var(--gold-500)")}
             onBlur={(e) =>
@@ -124,6 +139,93 @@ export default function Membres() {
             }
           />
         </div>
+
+        {/* Sexe */}
+        <div style={{ display: "flex", gap: "0.4rem" }}>
+          {[
+            ["Tous", "Tous"],
+            ["M", "♂ Homme"],
+            ["F", "♀ Femme"],
+          ].map(([val, label]) => (
+            <button
+              key={val}
+              onClick={() => setFilterSexe(val)}
+              style={{
+                padding: "0.45rem 0.8rem",
+                borderRadius: "0.4rem",
+                fontSize: "0.78rem",
+                fontWeight: 500,
+                border: "1.5px solid",
+                cursor: "pointer",
+                transition: "all 0.15s",
+                borderColor:
+                  filterSexe === val
+                    ? "var(--gold-500)"
+                    : "rgba(212,160,23,0.2)",
+                background:
+                  filterSexe === val ? "var(--gold-100)" : "transparent",
+                color:
+                  filterSexe === val ? "var(--gold-700)" : "var(--text-dark)",
+              }}
+            >
+              {label}
+            </button>
+          ))}
+        </div>
+
+        {/* Type */}
+        <select
+          value={filterType}
+          onChange={(e) => setFilterType(e.target.value)}
+          style={{
+            padding: "0.5rem 0.75rem",
+            border: "1.5px solid rgba(212,160,23,0.2)",
+            borderRadius: "0.4rem",
+            fontSize: "0.8rem",
+            outline: "none",
+            fontFamily: "'Nunito', sans-serif",
+            color: "var(--text-dark)",
+            background: "white",
+            cursor: "pointer",
+          }}
+        >
+          {["Tous", "pere", "mere", "enfant", "autre"].map((t) => (
+            <option key={t} value={t}>
+              {t === "Tous"
+                ? "Tous types"
+                : t.charAt(0).toUpperCase() + t.slice(1)}
+            </option>
+          ))}
+        </select>
+
+        {/* Sacrement */}
+        <select
+          value={filterSacrement}
+          onChange={(e) => setFilterSacrement(e.target.value)}
+          style={{
+            padding: "0.5rem 0.75rem",
+            border: "1.5px solid rgba(212,160,23,0.2)",
+            borderRadius: "0.4rem",
+            fontSize: "0.8rem",
+            outline: "none",
+            fontFamily: "'Nunito', sans-serif",
+            color: "var(--text-dark)",
+            background: "white",
+            cursor: "pointer",
+          }}
+        >
+          {[
+            ["Tous", "Tous sacrements"],
+            ["bapteme", "Baptisés"],
+            ["communion", "Communion"],
+            ["confirmation", "Confirmés"],
+          ].map(([val, label]) => (
+            <option key={val} value={val}>
+              {label}
+            </option>
+          ))}
+        </select>
+
         <span
           style={{ color: "#9a8a7a", fontSize: "0.8rem", marginLeft: "auto" }}
         >

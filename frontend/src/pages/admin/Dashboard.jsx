@@ -1,25 +1,37 @@
 import {
-  mockStats,
-  mockEventsRecents,
-  mockPresenceData,
-  mockMembres,
-} from "../../data/mockData";
-import {
   BarChart,
   Bar,
   XAxis,
   YAxis,
   Tooltip,
   ResponsiveContainer,
-  LineChart,
-  Line,
   CartesianGrid,
+  Cell,
 } from "recharts";
+import {
+  FaUsers,
+  FaHome,
+  FaDove,
+  FaRing,
+  FaCross,
+  FaHandsHelping,
+  FaStar,
+} from "react-icons/fa";
+import { useDashboard } from "../../hooks/useDashboard";
 
-const StatCard = ({ icon, label, labelMg, value, sub, color, bg }) => (
+// ── Composants utilitaires ──────────────────────────────────────────
+
+const StatCard = ({
+  icon,
+  label,
+  labelMg,
+  value,
+  sub,
+  color = "var(--gold-600, #b45309)",
+}) => (
   <div
     style={{
-      background: bg || "white",
+      background: "white",
       borderRadius: "1rem",
       padding: "1.5rem",
       boxShadow: "0 4px 20px rgba(0,0,0,0.06)",
@@ -39,22 +51,28 @@ const StatCard = ({ icon, label, labelMg, value, sub, color, bg }) => (
         width: 80,
         height: 80,
         borderRadius: "50%",
-        background: "rgba(255,255,255,0.08)",
+        background: "rgba(212,160,23,0.06)",
       }}
     />
-    <div style={{ fontSize: "1.8rem" }}>{icon}</div>
+    <div style={{ fontSize: "1.5rem", color }}>{icon}</div>
     <div>
       <div
         style={{
           fontSize: "2rem",
           fontWeight: 800,
-          color: color || "var(--gold-600)",
+          color,
           fontFamily: "'Cinzel', serif",
         }}
       >
         {value}
       </div>
-      <div style={{ fontWeight: 600, color: "var(--text-dark)", fontSize: "0.9rem" }}>
+      <div
+        style={{
+          fontWeight: 600,
+          color: "var(--text-dark)",
+          fontSize: "0.9rem",
+        }}
+      >
         {label}
       </div>
       {labelMg && (
@@ -79,38 +97,90 @@ const StatCard = ({ icon, label, labelMg, value, sub, color, bg }) => (
   </div>
 );
 
+const SectionTitle = ({ title, sub }) => (
+  <div style={{ marginBottom: "1.25rem" }}>
+    <h3
+      style={{
+        fontFamily: "'Lora', serif",
+        fontWeight: 600,
+        color: "var(--text-dark)",
+        fontSize: "1rem",
+      }}
+    >
+      {title}
+    </h3>
+    {sub && <p style={{ color: "#9a8a7a", fontSize: "0.78rem" }}>{sub}</p>}
+  </div>
+);
+
 const CustomTooltip = ({ active, payload, label }) => {
-  if (active && payload && payload.length) {
-    return (
-      <div
+  if (!active || !payload?.length) return null;
+  return (
+    <div
+      style={{
+        background: "white",
+        border: "1px solid rgba(212,160,23,0.3)",
+        borderRadius: "0.5rem",
+        padding: "0.75rem 1rem",
+        boxShadow: "0 4px 15px rgba(0,0,0,0.1)",
+      }}
+    >
+      <p
         style={{
-          background: "white",
-          border: "1px solid rgba(212,160,23,0.3)",
-          borderRadius: "0.5rem",
-          padding: "0.75rem 1rem",
-          boxShadow: "0 4px 15px rgba(0,0,0,0.1)",
+          fontWeight: 600,
+          color: "var(--text-dark)",
+          marginBottom: "0.25rem",
         }}
       >
-        <p
-          style={{
-            fontWeight: 600,
-            color: "var(--violet-700)",
-            marginBottom: "0.25rem",
-          }}
-        >
-          {label}
-        </p>
-        <p style={{ color: "var(--gold-600)", fontSize: "0.9rem" }}>
-          {payload[0].value}% de présence
-        </p>
-      </div>
-    );
-  }
-  return null;
+        {label}
+      </p>
+      <p style={{ color: "var(--gold-600, #b45309)", fontSize: "0.9rem" }}>
+        {payload[0].value} personne{payload[0].value > 1 ? "s" : ""}
+      </p>
+    </div>
+  );
 };
 
+const TYPE_COLORS = ["#d4a017", "#b45309", "#92400e", "#78350f"];
+const SACR_COLORS = ["#3b82f6", "#8b5cf6", "#10b981"];
+
+// ── Page ────────────────────────────────────────────────────────────
+
 export default function Dashboard() {
-  const actifCount = mockMembres.filter((m) => m.statut === "Actif").length;
+  const { data, loading, error } = useDashboard();
+
+  if (loading)
+    return (
+      <p style={{ color: "#9a8a7a", textAlign: "center", padding: "4rem" }}>
+        Chargement du tableau de bord...
+      </p>
+    );
+  if (error)
+    return (
+      <p
+        style={{
+          color: "rgb(185,28,28)",
+          textAlign: "center",
+          padding: "4rem",
+        }}
+      >
+        Erreur : {error}
+      </p>
+    );
+  if (!data) return null;
+
+  const {
+    totalPersonnes,
+    totalFamilles,
+    totalApvs,
+    totalMariages,
+    parType,
+    sacrements,
+    topFamilles,
+    derniersPersonnes,
+    sansMarriage,
+    pctBaptise,
+  } = data;
 
   return (
     <div>
@@ -127,11 +197,11 @@ export default function Dashboard() {
           Tableau de bord
         </h1>
         <p style={{ color: "#9a8a7a", fontSize: "0.88rem" }}>
-          Dashboard · Vue d'ensemble de la paroisse EKAR Soavy
+          Dashboard · Vue d'ensemble de la paroisse
         </p>
       </div>
 
-      {/* Stat cards */}
+      {/* ── Stat cards ── */}
       <div
         style={{
           display: "grid",
@@ -141,39 +211,50 @@ export default function Dashboard() {
         }}
       >
         <StatCard
-          icon="👥"
-          label="Membres totaux"
-          labelMg="Mpikambana rehetra"
-          value={mockStats.totalMembres}
+          icon={<FaUsers />}
+          label="Membres"
+          labelMg="Mpikambana"
+          value={totalPersonnes}
         />
         <StatCard
-          icon="🏠"
+          icon={<FaHome />}
           label="Familles"
           labelMg="Fianakaviana"
-          value={mockStats.familles}
+          value={totalFamilles}
         />
         <StatCard
-          icon="✅"
-          label="Membres actifs"
-          labelMg="Mpikambana mavitrika"
-          value={actifCount}
-          sub={`sur ${mockStats.totalMembres} membres`}
+          icon={<FaDove />}
+          label="APV"
+          labelMg="Antokony"
+          value={totalApvs}
+          color="rgb(6,95,70)"
         />
         <StatCard
-          icon="📈"
-          label="Taux de présence"
-          labelMg="Fanatrehana"
-          value={`${mockStats.tauxPresence}%`}
+          icon={<FaRing />}
+          label="Mariages"
+          labelMg="Fanambadiana"
+          value={totalMariages}
+          color="rgb(190,24,93)"
         />
         <StatCard
-          icon="🆕"
-          label="Nouveaux ce mois"
-          labelMg="Vaovao ity volana ity"
-          value={mockStats.nouveauxCeMois}
-          sub="Avril 2026"
+          icon={<FaCross />}
+          label="Baptisés"
+          labelMg="Natao batisa"
+          value={`${pctBaptise}%`}
+          sub={`du total des membres`}
+          color="#3b82f6"
+        />
+        <StatCard
+          icon={<FaHandsHelping />}
+          label="Sans mariage"
+          labelMg="Tsy nanambady"
+          value={sansMarriage}
+          sub="familles non enregistrées"
+          color="#9a8a7a"
         />
       </div>
 
+      {/* ── Graphiques ── */}
       <div
         style={{
           display: "grid",
@@ -182,7 +263,7 @@ export default function Dashboard() {
           marginBottom: "2rem",
         }}
       >
-        {/* Graphique présence */}
+        {/* Répartition par type */}
         <div
           style={{
             background: "white",
@@ -192,55 +273,40 @@ export default function Dashboard() {
             border: "1px solid rgba(212,160,23,0.1)",
           }}
         >
-          <div style={{ marginBottom: "1.25rem" }}>
-            <h3
-              style={{
-                fontFamily: "'Lora', serif",
-                fontWeight: 600,
-                color: "var(--text-dark)",
-                fontSize: "1rem",
-              }}
-            >
-              Taux de présence — 6 derniers mois
-            </h3>
-            <p style={{ color: "#9a8a7a", fontSize: "0.78rem" }}>
-              Fanatrehana tamin'ireo volana 6 farany
-            </p>
-          </div>
+          <SectionTitle
+            title="Répartition par type"
+            sub="Père · Mère · Enfant · Autre"
+          />
           <ResponsiveContainer width="100%" height={200}>
-            <BarChart data={mockPresenceData} barSize={28}>
+            <BarChart data={parType} barSize={36}>
               <CartesianGrid
                 strokeDasharray="3 3"
                 stroke="rgba(212,160,23,0.1)"
+                vertical={false}
               />
               <XAxis
-                dataKey="mois"
+                dataKey="type"
                 tick={{ fontSize: 12, fill: "#9a8a7a" }}
                 axisLine={false}
+                tickLine={false}
               />
               <YAxis
                 tick={{ fontSize: 12, fill: "#9a8a7a" }}
                 axisLine={false}
-                domain={[0, 100]}
-                unit="%"
+                tickLine={false}
+                allowDecimals={false}
               />
               <Tooltip content={<CustomTooltip />} />
-              <Bar
-                dataKey="presence"
-                fill="url(#goldGradient)"
-                radius={[4, 4, 0, 0]}
-              />
-              <defs>
-                <linearGradient id="goldGradient" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%" stopColor="#d4a017" />
-                  <stop offset="100%" stopColor="#8b6508" />
-                </linearGradient>
-              </defs>
+              <Bar dataKey="count" radius={[6, 6, 0, 0]}>
+                {parType.map((_, i) => (
+                  <Cell key={i} fill={TYPE_COLORS[i % TYPE_COLORS.length]} />
+                ))}
+              </Bar>
             </BarChart>
           </ResponsiveContainer>
         </div>
 
-        {/* Activités récentes */}
+        {/* Sacrements */}
         <div
           style={{
             background: "white",
@@ -250,271 +316,251 @@ export default function Dashboard() {
             border: "1px solid rgba(212,160,23,0.1)",
           }}
         >
-          <h3
-            style={{
-              fontFamily: "'Lora', serif",
-              fontWeight: 600,
-              color: "var(--text-dark)",
-              marginBottom: "0.25rem",
-              fontSize: "1rem",
-            }}
-          >
-            Activités récentes
-          </h3>
-          <p
-            style={{
-              color: "#9a8a7a",
-              fontSize: "0.78rem",
-              marginBottom: "1.25rem",
-            }}
-          >
-            Hetsika farany nataon'ny paroasy
-          </p>
-          <div
-            style={{ display: "flex", flexDirection: "column", gap: "0.75rem" }}
-          >
-            {mockEventsRecents.map((ev) => (
-              <div
-                key={ev.id}
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: "1rem",
-                  padding: "0.75rem",
-                  borderRadius: "0.5rem",
-                  background: "rgba(245,240,232,0.6)",
-                  border: "1px solid rgba(212,160,23,0.1)",
-                }}
-              >
-                <div
-                  style={{
-                    width: 40,
-                    height: 40,
-                    borderRadius: "0.5rem",
-                    background:
-                      "linear-gradient(135deg, var(--violet-100), var(--gold-100))",
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    fontSize: "1.1rem",
-                    flexShrink: 0,
-                  }}
-                >
-                  {ev.type === "Messe"
-                    ? "⛪"
-                    : ev.type === "Réunion"
-                      ? "👥"
-                      : ev.type === "Formation"
-                        ? "📖"
-                        : "🙏"}
-                </div>
-                <div style={{ flex: 1, minWidth: 0 }}>
-                  <div
-                    style={{
-                      fontWeight: 600,
-                      fontSize: "0.85rem",
-                      color: "#2d2416",
-                      overflow: "hidden",
-                      textOverflow: "ellipsis",
-                      whiteSpace: "nowrap",
-                    }}
-                  >
-                    {ev.titre}
-                  </div>
-                  <div style={{ color: "#9a8a7a", fontSize: "0.75rem" }}>
-                    {new Date(ev.date).toLocaleDateString("fr-FR", {
-                      day: "numeric",
-                      month: "short",
-                    })}
-                  </div>
-                </div>
-                <div
-                  style={{
-                    background: "var(--gold-100)",
-                    color: "var(--gold-700)",
-                    padding: "2px 10px",
-                    borderRadius: "999px",
-                    fontSize: "0.72rem",
-                    fontWeight: 600,
-                    flexShrink: 0,
-                  }}
-                >
-                  {ev.participants} pers.
-                </div>
-              </div>
-            ))}
-          </div>
+          <SectionTitle
+            title="Sacrements reçus"
+            sub="Baptême · Communion · Confirmation"
+          />
+          <ResponsiveContainer width="100%" height={200}>
+            <BarChart data={sacrements} barSize={36}>
+              <CartesianGrid
+                strokeDasharray="3 3"
+                stroke="rgba(212,160,23,0.1)"
+                vertical={false}
+              />
+              <XAxis
+                dataKey="label"
+                tick={{ fontSize: 12, fill: "#9a8a7a" }}
+                axisLine={false}
+                tickLine={false}
+              />
+              <YAxis
+                tick={{ fontSize: 12, fill: "#9a8a7a" }}
+                axisLine={false}
+                tickLine={false}
+                allowDecimals={false}
+              />
+              <Tooltip content={<CustomTooltip />} />
+              <Bar dataKey="count" radius={[6, 6, 0, 0]}>
+                {sacrements.map((_, i) => (
+                  <Cell key={i} fill={SACR_COLORS[i % SACR_COLORS.length]} />
+                ))}
+              </Bar>
+            </BarChart>
+          </ResponsiveContainer>
         </div>
       </div>
 
-      {/* Membres récents */}
+      {/* ── Tableaux ── */}
       <div
         style={{
-          background: "white",
-          borderRadius: "1rem",
-          padding: "1.5rem",
-          boxShadow: "0 4px 20px rgba(0,0,0,0.06)",
-          border: "1px solid rgba(212,160,23,0.1)",
+          display: "grid",
+          gridTemplateColumns: "1fr 1fr",
+          gap: "1.5rem",
         }}
       >
+        {/* Derniers membres inscrits */}
         <div
           style={{
-            display: "flex",
-            justifyContent: "space-between",
-            alignItems: "center",
-            marginBottom: "1.25rem",
+            background: "white",
+            borderRadius: "1rem",
+            padding: "1.5rem",
+            boxShadow: "0 4px 20px rgba(0,0,0,0.06)",
+            border: "1px solid rgba(212,160,23,0.1)",
           }}
         >
-          <div>
-            <h3
-              style={{
-                fontFamily: "'Lora', serif",
-                fontWeight: 600,
-                color: "var(--text-dark)",
-                fontSize: "1rem",
-              }}
-            >
-              Derniers membres inscrits
-            </h3>
-            <p style={{ color: "#9a8a7a", fontSize: "0.78rem" }}>
-              Mpikambana farany niditra
-            </p>
-          </div>
-          <a
-            href="/admin/membres"
-            style={{
-              color: "var(--gold-600)",
-              fontSize: "0.82rem",
-              textDecoration: "none",
-              fontWeight: 600,
-            }}
+          <SectionTitle
+            title="Derniers membres inscrits"
+            sub="Mpikambana farany niditra"
+          />
+          <div
+            style={{ display: "flex", flexDirection: "column", gap: "0.6rem" }}
           >
-            Voir tous →
-          </a>
-        </div>
-        <div style={{ overflowX: "auto" }}>
-          <table style={{ width: "100%", borderCollapse: "collapse" }}>
-            <thead>
-              <tr style={{ borderBottom: "2px solid rgba(212,160,23,0.15)" }}>
-                {["Nom & Prénom", "Famille", "Rôle", "Quartier", "Statut"].map(
-                  (h) => (
-                    <th
-                      key={h}
-                      style={{
-                        padding: "0.5rem 0.75rem",
-                        textAlign: "left",
-                        color: "var(--text-dark)",
-                        fontSize: "0.75rem",
-                        fontWeight: 600,
-                        letterSpacing: "0.08em",
-                        textTransform: "uppercase",
-                      }}
-                    >
-                      {h}
-                    </th>
-                  ),
-                )}
-              </tr>
-            </thead>
-            <tbody>
-              {mockMembres.slice(0, 5).map((m) => (
-                <tr
-                  key={m.id}
-                  style={{ borderBottom: "1px solid rgba(212,160,23,0.08)" }}
-                  onMouseEnter={(e) =>
-                    (e.currentTarget.style.background = "rgba(245,240,232,0.6)")
-                  }
-                  onMouseLeave={(e) =>
-                    (e.currentTarget.style.background = "transparent")
-                  }
+            {derniersPersonnes.length === 0 ? (
+              <p style={{ color: "#9a8a7a", fontSize: "0.85rem" }}>
+                Aucun membre
+              </p>
+            ) : (
+              derniersPersonnes.map((p, idx) => (
+                <div
+                  key={p.id}
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "0.75rem",
+                    padding: "0.6rem 0.75rem",
+                    borderRadius: "0.5rem",
+                    background:
+                      idx % 2 === 0 ? "white" : "rgba(250,247,242,0.6)",
+                  }}
                 >
-                  <td
+                  <div
                     style={{
-                      padding: "0.75rem",
+                      width: 34,
+                      height: 34,
+                      borderRadius: "50%",
+                      background: `linear-gradient(135deg, hsl(${(p.id * 47) % 360},60%,55%), hsl(${(p.id * 47 + 60) % 360},70%,45%))`,
                       display: "flex",
                       alignItems: "center",
-                      gap: "0.6rem",
+                      justifyContent: "center",
+                      color: "white",
+                      fontSize: "0.75rem",
+                      fontWeight: 700,
+                      flexShrink: 0,
+                    }}
+                  >
+                    {(p.prenom || p.nom || "?").charAt(0)}
+                    {(p.nom || "").charAt(0)}
+                  </div>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div
+                      style={{
+                        fontWeight: 600,
+                        fontSize: "0.85rem",
+                        color: "#2d2416",
+                        overflow: "hidden",
+                        textOverflow: "ellipsis",
+                        whiteSpace: "nowrap",
+                      }}
+                    >
+                      {p.prenom || ""} {p.nom}
+                    </div>
+                    <div style={{ fontSize: "0.72rem", color: "#9a8a7a" }}>
+                      {p.type} · {p.profession || "—"}
+                    </div>
+                  </div>
+                  <span
+                    style={{
+                      background: "rgba(212,160,23,0.1)",
+                      color: "#8B6914",
+                      padding: "2px 8px",
+                      borderRadius: "999px",
+                      fontSize: "0.68rem",
+                      fontWeight: 600,
+                      flexShrink: 0,
+                    }}
+                  >
+                    #{p.id}
+                  </span>
+                </div>
+              ))
+            )}
+          </div>
+        </div>
+
+        {/* Top familles */}
+        <div
+          style={{
+            background: "white",
+            borderRadius: "1rem",
+            padding: "1.5rem",
+            boxShadow: "0 4px 20px rgba(0,0,0,0.06)",
+            border: "1px solid rgba(212,160,23,0.1)",
+          }}
+        >
+          <SectionTitle
+            title="Familles les plus nombreuses"
+            sub="Fianakaviana lehibe"
+          />
+          <div
+            style={{ display: "flex", flexDirection: "column", gap: "0.6rem" }}
+          >
+            {topFamilles.length === 0 ? (
+              <p style={{ color: "#9a8a7a", fontSize: "0.85rem" }}>
+                Aucune famille
+              </p>
+            ) : (
+              topFamilles.map((f, idx) => {
+                const membres = f.Personnes || [];
+                const pere = membres.find((p) => p.type === "pere");
+                const mere = membres.find((p) => p.type === "mere");
+                const maxMembres = topFamilles[0]?.Personnes?.length || 1;
+                const pct = Math.round((membres.length / maxMembres) * 100);
+                return (
+                  <div
+                    key={f.id}
+                    style={{
+                      padding: "0.6rem 0.75rem",
+                      borderRadius: "0.5rem",
+                      background:
+                        idx % 2 === 0 ? "white" : "rgba(250,247,242,0.6)",
                     }}
                   >
                     <div
                       style={{
-                        width: 32,
-                        height: 32,
-                        borderRadius: "50%",
-                        background:
-                          "linear-gradient(135deg, var(--violet-400), var(--gold-500))",
                         display: "flex",
+                        justifyContent: "space-between",
                         alignItems: "center",
-                        justifyContent: "center",
-                        color: "white",
-                        fontSize: "0.75rem",
-                        fontWeight: 700,
-                        flexShrink: 0,
+                        marginBottom: "0.35rem",
                       }}
                     >
-                      {m.prenom.charAt(0)}
-                      {m.nom.charAt(0)}
+                      <div>
+                        <span
+                          style={{
+                            fontWeight: 600,
+                            fontSize: "0.85rem",
+                            color: "#2d2416",
+                          }}
+                        >
+                          {pere
+                            ? `${pere.prenom || ""} ${pere.nom}`
+                            : mere
+                              ? `${mere.prenom || ""} ${mere.nom}`
+                              : `Famille #${f.id}`}
+                        </span>
+                        <span
+                          style={{
+                            fontSize: "0.72rem",
+                            color: "#9a8a7a",
+                            marginLeft: "0.5rem",
+                          }}
+                        >
+                          {f.numero}
+                        </span>
+                      </div>
+                      <span
+                        style={{
+                          fontFamily: "'Cinzel', serif",
+                          fontWeight: 700,
+                          color: "var(--gold-600, #b45309)",
+                          fontSize: "0.9rem",
+                        }}
+                      >
+                        {membres.length}{" "}
+                        <span
+                          style={{
+                            fontSize: "0.65rem",
+                            fontFamily: "'Nunito'",
+                          }}
+                        >
+                          mbr
+                        </span>
+                      </span>
                     </div>
-                    <span style={{ fontWeight: 500, fontSize: "0.88rem" }}>
-                      {m.prenom} {m.nom}
-                    </span>
-                  </td>
-                  <td
-                    style={{
-                      padding: "0.75rem",
-                      color: "#6b5a4a",
-                      fontSize: "0.85rem",
-                    }}
-                  >
-                    {m.famille}
-                  </td>
-                  <td style={{ padding: "0.75rem" }}>
-                    <span
+                    {/* Barre de progression */}
+                    <div
                       style={{
-                        background: "var(--violet-100)",
-                        color: "var(--violet-700)",
-                        padding: "2px 10px",
+                        height: 4,
+                        background: "rgba(212,160,23,0.12)",
                         borderRadius: "999px",
-                        fontSize: "0.72rem",
-                        fontWeight: 600,
+                        overflow: "hidden",
                       }}
                     >
-                      {m.role}
-                    </span>
-                  </td>
-                  <td
-                    style={{
-                      padding: "0.75rem",
-                      color: "#6b5a4a",
-                      fontSize: "0.85rem",
-                    }}
-                  >
-                    {m.quartier}
-                  </td>
-                  <td style={{ padding: "0.75rem" }}>
-                    <span
-                      style={{
-                        background:
-                          m.statut === "Actif"
-                            ? "rgb(209,250,229)"
-                            : "rgb(254,226,226)",
-                        color:
-                          m.statut === "Actif"
-                            ? "rgb(6,95,70)"
-                            : "rgb(185,28,28)",
-                        padding: "2px 10px",
-                        borderRadius: "999px",
-                        fontSize: "0.72rem",
-                        fontWeight: 600,
-                      }}
-                    >
-                      {m.statut}
-                    </span>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+                      <div
+                        style={{
+                          height: "100%",
+                          width: `${pct}%`,
+                          background:
+                            "linear-gradient(90deg, #d4a017, #b45309)",
+                          borderRadius: "999px",
+                          transition: "width 0.6s ease",
+                        }}
+                      />
+                    </div>
+                  </div>
+                );
+              })
+            )}
+          </div>
         </div>
       </div>
     </div>

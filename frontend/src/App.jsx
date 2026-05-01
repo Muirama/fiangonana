@@ -12,6 +12,7 @@ import AdminLayout from "./components/layout/AdminLayout";
 import Dashboard from "./pages/admin/Dashboard";
 import Membres from "./pages/admin/Membres";
 import Familles from "./pages/admin/Familles";
+import Mariages from "./pages/admin/Mariages";
 
 function ProtectedRoute({ children }) {
   const { isAuth } = useAuth();
@@ -41,6 +42,10 @@ function AppRoutes() {
       <Route
         path="/admin/familles"
         element={<AdminPage component={Familles} />}
+      />
+      <Route
+        path="/admin/mariages"
+        element={<AdminPage component={Mariages} />}
       />
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
