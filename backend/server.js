@@ -11,7 +11,11 @@ const familleRoutes = require("./routes/famille.routes");
 const mariageRoutes  = require("./routes/mariage.routes");
 
 const app = express();
-app.use(cors());
+app.use(cors({
+  origin: process.env.NODE_ENV === 'production'
+    ? ["https://ekarsoavy.netlify.app"]
+    : "*",
+}));
 app.use(express.json());
 
 app.use("/api/personnes", personneRoutes);
