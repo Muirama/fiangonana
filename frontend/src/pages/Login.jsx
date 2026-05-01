@@ -260,20 +260,6 @@ export default function Login() {
               </div>
             )}
 
-            {/* Hint */}
-            <div
-              style={{
-                background: "rgba(212,160,23,0.1)",
-                borderRadius: "0.5rem",
-                padding: "0.75rem",
-                marginBottom: "1.5rem",
-                fontSize: "0.78rem",
-                color: "#8b7e70",
-              }}
-            >
-              Démo : admin@ekarsoavy.mg / admin123
-            </div>
-
             <button
               type="submit"
               disabled={loading}
